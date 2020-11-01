@@ -55,6 +55,9 @@ class _MyHomePageState extends State<MyHomePage> {
   //this list you can add and delete objects to but cannot delete list
   final _offsets = <Offset>[];
   Offset lastOffset;
+  Offset localPoint;
+  double _scaleRadius = 100.0;
+  double _baseRadius = 1.0;
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -70,24 +73,43 @@ class _MyHomePageState extends State<MyHomePage> {
       //   title: Text(widget.title),
       // ),
       body: GestureDetector(
-        onPanStart: (details) {
-          print("globalDetailsStart: ${details.globalPosition}");
+        // onPanStart: (DragStartDetails details) {
+        //   print("globalDetailsStart: ${details.globalPosition}");
+        //   setState(() {
+        //     _offsets.add(details.globalPosition);
+        //   });
+        // },
+        // onPanUpdate: (DragUpdateDetails details) {
+        //   setState(() {
+        //     // _offsets.clear();
+        //     // _offsets.add(details.globalPosition);
+
+        //     lastOffset = details.globalPosition;
+        //   });
+        // },
+        // onPanEnd: (DragEndDetails details) {
+        //   // _offsets.add(lastOffset);
+        // },
+        onScaleStart: (ScaleStartDetails details) {
           setState(() {
-            _offsets.add(details.globalPosition);
+            _offsets.clear();
+            _offsets.add(details.localFocalPoint);
+            _baseRadius = _scaleRadius;
           });
         },
-        onPanUpdate: (details) {
+        onScaleUpdate: (ScaleUpdateDetails details) {
           setState(() {
-            _offsets.add(details.globalPosition);
-            lastOffset = details.globalPosition;
+            _offsets.clear();
+            _offsets.add(details.localFocalPoint);
+            _scaleRadius = _baseRadius * details.scale;
           });
-        },
-        onPanEnd: (details) {
-          _offsets.add(lastOffset);
         },
         child: Center(
           child: CustomPaint(
-            painter: FlipBookPainter(_offsets),
+            painter: FlipBookPainter(
+              _offsets,
+              _scaleRadius,
+            ),
             child: Container(
               height: MediaQuery.of(context).size.height,
               width: MediaQuery.of(context).size.width,
@@ -103,8 +125,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class FlipBookPainter extends CustomPainter {
   final offsets;
+  final radius;
 
-  FlipBookPainter(this.offsets) : super();
+  FlipBookPainter(this.offsets, this.radius) : super();
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -120,14 +143,10 @@ class FlipBookPainter extends CustomPainter {
     // canvas.drawImage(image, offset, paint);
     for (var offset in offsets) {
       print("offset: ${offset}");
-      // canvas.drawPoints(
-      //   PointMode.lines,
-      //   [offset],
-      //   paint,
-      // );
+
       canvas.drawCircle(
         offset,
-        100.0,
+        radius,
         paint,
       );
     }
