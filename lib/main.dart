@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 void main() {
   runApp(MyApp());
@@ -58,6 +60,21 @@ class _MyHomePageState extends State<MyHomePage> {
   Offset localPoint;
   double _scaleRadius = 100.0;
   double _baseRadius = 1.0;
+  final ImagePicker _picker = ImagePicker();
+
+  File _image;
+  Future getImage() async {
+    final pickedFile = await _picker.getImage(source: ImageSource.gallery);
+
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+      } else {
+        print('No image selected.');
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -111,14 +128,28 @@ class _MyHomePageState extends State<MyHomePage> {
               _scaleRadius,
             ),
             child: Container(
-              height: MediaQuery.of(context).size.height,
-              width: MediaQuery.of(context).size.width,
-              // color: Colors.red[50],
+              child: Center(
+                child: _image == null
+                    ? Text('No image selected.')
+                    : Image.file(_image),
+              ),
             ),
+            // Container(
+            //   height: MediaQuery.of(context).size.height,
+            //   width: MediaQuery.of(context).size.width,
+            //   decoration: BoxDecoration(
+            //     image: Decoration
+            //   ),
+            // color: Colors.red[50],
+            // ),
           ),
         ),
       ),
-      // This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButton: FloatingActionButton(
+        onPressed: getImage,
+        tooltip: 'Pick Image',
+        child: Icon(Icons.add_a_photo),
+      ),
     );
   }
 }

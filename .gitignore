@@ -1,0 +1,5 @@
+build/
+.dart*/**
+.flutter-plugins*
+.packages
+*.lock
