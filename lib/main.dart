@@ -1,8 +1,11 @@
 import 'dart:io';
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:paint_over/image_painter.dart';
+import 'package:image/image.dart' as image;
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(MyApp());
@@ -61,28 +64,17 @@ class _MyHomePageState extends State<MyHomePage> {
   double _scaleRadius = 100.0;
   double _baseRadius = 1.0;
   final ImagePicker _picker = ImagePicker();
-
   File _image;
-  Future getImage() async {
+  ui.Image uiImage;
+  Future<File> getImage() async {
     final pickedFile = await _picker.getImage(source: ImageSource.gallery);
-
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      } else {
-        print('No image selected.');
-      }
-    });
+    _image = File(pickedFile.path);
+    uiImage = await getUiImage(_image.path, 400, 400);
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       // appBar: AppBar(
       //   // Here we take the value from the MyHomePage object that was created by
@@ -90,23 +82,6 @@ class _MyHomePageState extends State<MyHomePage> {
       //   title: Text(widget.title),
       // ),
       body: GestureDetector(
-        // onPanStart: (DragStartDetails details) {
-        //   print("globalDetailsStart: ${details.globalPosition}");
-        //   setState(() {
-        //     _offsets.add(details.globalPosition);
-        //   });
-        // },
-        // onPanUpdate: (DragUpdateDetails details) {
-        //   setState(() {
-        //     // _offsets.clear();
-        //     // _offsets.add(details.globalPosition);
-
-        //     lastOffset = details.globalPosition;
-        //   });
-        // },
-        // onPanEnd: (DragEndDetails details) {
-        //   // _offsets.add(lastOffset);
-        // },
         onScaleStart: (ScaleStartDetails details) {
           setState(() {
             _offsets.clear();
@@ -123,15 +98,18 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         child: Center(
           child: CustomPaint(
-            painter: FlipBookPainter(
+            painter: ImagePainter(
               _offsets,
               _scaleRadius,
+              uiImage,
+              context
             ),
             child: Container(
               child: Center(
-                child: _image == null
-                    ? Text('No image selected.')
-                    : Image.file(_image),
+                child: Container(
+                  height: MediaQuery.of(context).size.height,
+                  width: MediaQuery.of(context).size.width,
+                ),
               ),
             ),
             // Container(
@@ -148,41 +126,19 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: getImage,
         tooltip: 'Pick Image',
-        child: Icon(Icons.add_a_photo),
+        child: Icon(Icons.photo_album),
       ),
     );
   }
 }
 
-class FlipBookPainter extends CustomPainter {
-  final offsets;
-  final radius;
-
-  FlipBookPainter(this.offsets, this.radius) : super();
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Color.fromRGBO(255, 0, 255, 0.1)
-      ..isAntiAlias = true
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.fill;
-    // canvas.drawPoints(
-    //   PointMode.lines,
-    //   offsets,
-    //   paint,
-    // );
-    // canvas.drawImage(image, offset, paint);
-    for (var offset in offsets) {
-      print("offset: ${offset}");
-
-      canvas.drawCircle(
-        offset,
-        radius,
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+Future<ui.Image> getUiImage(String imagePath, int height, int width) async {
+  final ByteData assetImageByteData = await rootBundle.load(imagePath);
+  image.Image baseSizeImage =
+      image.decodeImage(assetImageByteData.buffer.asUint8List());
+  image.Image resizeImage =
+      image.copyResize(baseSizeImage, height: height, width: width);
+  ui.Codec codec = await ui.instantiateImageCodec(image.encodePng(resizeImage));
+  frameInfo = await codec.getNextFrame();
+  return frameInfo.image;
 }
