@@ -25,6 +25,7 @@ class ImagePainter extends CustomPainter {
 
     if (_image != null) {
       print("_image is not null. radius: $radius");
+      
 
       // canvas.drawImage(_image, Offset.zero, paint);
       // canvas.scale(radius);

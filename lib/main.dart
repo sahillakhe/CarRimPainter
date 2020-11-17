@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:paint_over/image_painter.dart';
 import 'package:image/image.dart' as image;
 import 'package:flutter/services.dart';
+import 'package:paint_over/pixel_color_picker.dart';
 
 void main() {
   runApp(MyApp());
@@ -33,7 +34,8 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      // home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: ColorPickerWidget(),
     );
   }
 }
@@ -98,12 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         child: Center(
           child: CustomPaint(
-            painter: ImagePainter(
-              _offsets,
-              _scaleRadius,
-              uiImage,
-              context
-            ),
+            painter: ImagePainter(_offsets, _scaleRadius, uiImage, context),
             child: Container(
               child: Center(
                 child: Container(
